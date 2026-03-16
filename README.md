@@ -55,9 +55,10 @@ All modeling code — including auto-labeling, fine-tuning, and inference — is
 
 ```python
 # Search for a song and predict its themes
-lyrics = song_search("The Night We Met", "Lord Huron")
-themes = predict_themes(lyrics, threshold=0.5)
-print(themes)
+lyrics = song_search('Risk it All','Bruno Mars')
+if lyrics:
+    themes = predict_themes(lyrics)
+    print(themes)
 # → {'heartbreak and loss': 0.91, 'nostalgia and memory': 0.84, 'loneliness and isolation': 0.72}
 ```
 
