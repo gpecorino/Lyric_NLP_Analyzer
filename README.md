@@ -61,7 +61,7 @@ print(themes)
 # → {'heartbreak and loss': 0.91, 'nostalgia and memory': 0.84, 'loneliness and isolation': 0.72}
 ```
 
-The `threshold` parameter controls how selective the model is — lower values surface more themes, higher values return only the most confident predictions.
+The `threshold` parameter controls how selective the model is. Lower values surface more themes, higher values return only the most confident predictions.
 
 ### Key design decisions
 
