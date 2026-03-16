@@ -20,7 +20,7 @@ The fine-tuned model and tokenizer are saved to [Hugging Face Hub](https://huggi
 
 The model predicts the presence of these 12 themes:
 
-| Theme |
+| Theme ||
 |---|---|
 | Love and romance | Heartbreak and loss |
 | Identity and self-discovery | Rebellion and resistance |
