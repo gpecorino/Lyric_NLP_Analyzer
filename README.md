@@ -63,8 +63,6 @@ print(themes)
 
 The `threshold` parameter controls how selective the model is — lower values surface more themes, higher values return only the most confident predictions.
 
----
-
 ### Key design decisions
 
 **Why Longformer?** Standard BERT models truncate at 512 tokens. Approximately 19% of songs in the dataset exceed 400 words, making Longformer's 4096 token limit a better fit for full lyric ingestion without truncation.
@@ -75,7 +73,7 @@ The `threshold` parameter controls how selective the model is — lower values s
 
 
 ## Areas for Improvement
-The model captures many themes present in song lyrics but several limiting factors were encountered during development. The following areas represent the most impactful opportunities for improvement:
+The model captures many themes present in song lyrics but several limiting factors were encountered during development, including hardware performance constraints. The following areas represent the most impactful opportunities for improvement:
 
 1. **Increase the amount of training data**: The dataset of 900+ songs is functional but on the smaller side for fine-tuning a transformer model. Expanding to 2000+ songs, particularly for underrepresented themes, would likely improve generalization and reduce overfitting.
 
