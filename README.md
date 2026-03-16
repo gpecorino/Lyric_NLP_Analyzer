@@ -71,6 +71,28 @@ The `threshold` parameter controls how selective the model is. Lower values surf
 
 **Why multi-label?** Songs commonly express more than one theme simultaneously. Multi-label classification with sigmoid activation allows each theme to be predicted independently rather than forcing a single category per song.
 
+### Performance
+The model was trained for 6 epochs on 85% of the labeled dataset and evaluated against a held-out validation set of 15%. Both training loss and validation loss decreased consistently across all epochs, indicating the model learned without significant overfitting.
+
+| Epoch | Training Loss | Validation Loss | F1 Micro | F1 Macro |
+|---|---|---|---|---|
+| 1 | 0.6489 | 0.4233 | 0.8777 | 0.7780 |
+| 2 | 0.4083 | 0.3923 | 0.8975 | 0.8522 |
+| 3 | 0.3642 | 0.3440 | 0.9062 | 0.8796 |
+| 4 | 0.3235 | 0.3311 | 0.9120 | 0.8954 |
+| 5 | 0.2972 | 0.3247 | **0.9130** | **0.8941** |
+| 6 | 0.2852 | 0.3236 | 0.9115 | 0.8928 |
+
+The best performing checkpoint was saved at **epoch 5** based on peak F1 Micro score.
+
+#### Metrics explained
+
+- **F1 Micro** measures overall performance across all theme predictions weighted by frequency, a score of 0.913 means the model is correctly identifying themes in the vast majority of cases across the full validation set
+- **F1 Macro** averages performance equally across all 12 themes regardless of how often they appear, a score of 0.894 indicates the model performs consistently well even on less common themes, not just the most frequent ones
+
+#### Notes on ROC AUC
+
+ROC AUC returned `nan` during training. This occurs when a theme has no positive examples in the validation split, which can happen with rare themes in a 15% holdout of 900 songs. This does not reflect a problem with the model, the F1 scores are the more reliable performance indicator for this dataset size. Per-label ROC AUC can be computed after training using a larger evaluation set.
 
 ## Areas for Improvement
 The model captures many themes present in song lyrics but several limiting factors were encountered during development, including hardware performance constraints. The following areas represent the most impactful opportunities for improvement:
