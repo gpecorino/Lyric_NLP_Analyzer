@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A multi-label theme classification model for song lyrics built on Longformer. Given a song's lyrics the model identifies which of 12 themes are present and returns a confidence score for each. This project covers the full pipeline from :
+A multi-label theme classification model for song lyrics built on [Longformer](https://huggingface.co/allenai/longformer-base-4096). Given a song's lyrics, the model identifies which of 12 themes are present and returns a confidence score for each. This project covers the full pipeline from :
 + Lyric scraping
 + Auto-labeling
 + Fine-tuning
@@ -18,7 +18,7 @@ The fine-tuned model and tokenizer are saved to [Hugging Face Hub](https://huggi
 
 ## Themes
 
-The model predicts the presence of these 12 themes:
+The model predicts the presence of 12 themes, selected to capture the most common subjects in popular music without becoming too granular:
 
 | Themes ||
 |---|---|
@@ -29,28 +29,41 @@ The model predicts the presence of these 12 themes:
 | Spirituality and faith | Ambition and success |
 | Loneliness and isolation | Death and mortality |
 
-These themes were created to capture as many popular music themes as possible without getting to granular. 
-
 ## About the Dataset
-
- **Size:** 900+ songs
+- **Size:** 900+ songs
 - **Genre:** Mixed / various
+- **Decades:** Wide range
 - **Source:** Lyrics scraped from the [Genius API](https://genius.com/developers) using the `lyricsgenius` Python wrapper
 - **Labels:** Auto-generated using zero-shot classification with `facebook/bart-large-mnli` — no manual labeling was performed
 - **Format:** Stored locally as `lyrics_labeled.json` — not included in this repository due to copyright considerations
-- 
-The dataset is not publicly distributed. To reproduce it, follow the setup instructions below and run the scraping and labeling cells in the notebook using your own Genius API token.
 
-The dataset for this project was created from scratch by me. I first generated a list of artists and songs spanning a wide range of genres with the help of generative AI that I stored in the [english_song_dataset.csv](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/english_song_dataset.csv). Then I used the [lyric_scraping notebook](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/lyric_scrapper.ipynb) to pull the lyrics using lyricgenius library and then process the lyrics to prepare them for use in the model. These lyrics were then stored in [lyric_list.txt](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/lyrics_list.txt) for easy access.
+The dataset was built from scratch in three steps:
 
-
+1. A list of artists and songs spanning a wide range of genres and decades was generated with the help of generative AI and stored in [english_song_dataset.csv](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/english_song_dataset.csv)
+2. Lyrics were scraped and cleaned using the [lyric_scraping notebook](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/lyric_scrapper.ipynb) and stored in [lyrics_list.txt](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/lyrics_list.txt)
+3. Theme labels were automatically assigned in Stage 1 of the [modeling notebook](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/longform_bert_model.ipynb) and the data was stored in the [lyrics_labeled.json](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/lyrics_labeled.json) for use during fine-tuning training.
 
 ## Modeling
 
-All the code for the model, including the auto-labeling, fine-tuning and inference are located in the [longform_bert_model notebook](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/longform_bert_model.ipynb). This notebook is broken up into 3 main parts:
-1. Auto-Labeling
-2. Fine-Tuning
-3. Inference
+All modeling code — including auto-labeling, fine-tuning, and inference — is located in the [longform_bert_model notebook](https://github.com/gpecorino/Lyric_NLP_Analyzer/blob/main/longform_bert_model.ipynb). The notebook is organized into three parts:
+
+1. **Auto-labeling** — zero-shot theme assignment using `facebook/bart-large-mnli`
+2. **Fine-tuning** — Longformer training on the auto-labeled dataset
+3. **Inference** — loading the saved model and predicting themes for new songs
+
+### Inference example
+
+```python
+# Search for a song and predict its themes
+lyrics = song_search("The Night We Met", "Lord Huron")
+themes = predict_themes(lyrics, threshold=0.5)
+print(themes)
+# → {'heartbreak and loss': 0.91, 'nostalgia and memory': 0.84, 'loneliness and isolation': 0.72}
+```
+
+The `threshold` parameter controls how selective the model is — lower values surface more themes, higher values return only the most confident predictions.
+
+---
 
 ### Key design decisions
 
@@ -62,17 +75,25 @@ All the code for the model, including the auto-labeling, fine-tuning and inferen
 
 
 ## Areas for Improvement
-The model is able to capture many themes present in the song lyrics but there were sevearl limiting factors that I ran into during model creation. Because of this there is still room for improvemen:
-1. **Increase the Amount of Data**:
-2. **Improve Training Labels**:
-3. **Training More Epochs**:
+The model captures many themes present in song lyrics but several limiting factors were encountered during development. The following areas represent the most impactful opportunities for improvement:
+
+1. **Increase the amount of training data**: The dataset of 900+ songs is functional but on the smaller side for fine-tuning a transformer model. Expanding to 2000+ songs, particularly for underrepresented themes, would likely improve generalization and reduce overfitting.
+
+2. **Improve training label quality**: Theme labels were generated automatically using zero-shot classification, which introduces noise. Manually reviewing and correcting a subset of the lowest-confidence labels would directly improve the quality of the training signal the model learns from.
+
+3. **Train for more epochs with a tuned learning rate schedule**: Training was limited to 6 epochs due to hardware and time constraints. Additional epochs combined with a cosine learning rate schedule could allow the model to converge more fully, particularly for less common themes.
+
+4. **Per-label confidence thresholds**: The current inference uses a single threshold of 0.5 for all themes. Some themes score lower even when correctly detected. Tuning a separate threshold per label against the validation set would improve precision and recall across the board.
+
+5. **Address class imbalance**: Some themes appear far more frequently in the dataset than others. Applying class weights during training would penalize errors on rare themes more heavily, encouraging the model to learn them rather than defaulting to the most common ones.
 
 
 ## Technologies
 
 + Python: Primary language used for data collection, data processing and model training
-+ Pandas: Used for data manipulation 
-+ Pytorch:
-+ Scikit-Learn:
-+ Lyricgenius:
-+ LongForm Bert Model:
++ Pandas: Data loading and manipulation 
++ Pytorch: Tensor operations, model training, and GPU management
++ Scikit-Learn: Train/validation splitting and evaluation metrics (F1, ROC AUC)
++ Lyricgenius: Genius API wrapper for scraping song lyrics
++ Hugging Face Transformers: Longformer model architecture, tokenizer, and Trainer API
++ Hugging Face Hub: Cloud storage for fine-tuned model weights
